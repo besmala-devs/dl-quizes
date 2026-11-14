@@ -1,0 +1,554 @@
+{
+  "chapter": {
+    "id": "ch8",
+    "title": "Deep Neural Network: Optimization & Training",
+    "emoji": "⚡",
+    "description": "Mini-batch, Momentum, RMSProp, Adam, BatchNorm, Softmax"
+  },
+  "quizzes": [
+    {
+      "id": "tf-basics",
+      "title": "True / False",
+      "type": "tf",
+      "questions": [
+        {
+          "type": "tf",
+          "q": "An epoch and an iteration are the same thing.",
+          "answer": false,
+          "explain": "An iteration is one weight update on one mini-batch; an epoch is completed only when the whole training set has been processed (many iterations)."
+        },
+        {
+          "type": "tf",
+          "q": "In batch gradient descent, weights are modified only after the whole dataset has been processed.",
+          "answer": true,
+          "explain": "That is exactly why batch mode is slow on huge datasets. Mini-batch GD updates the weights after each mini-batch instead."
+        },
+        {
+          "type": "tf",
+          "q": "With mini-batch gradient descent, the cost decreases strictly at every iteration.",
+          "answer": false,
+          "explain": "The cost curve is noisy and not strictly decreasing (local optimization on each mini-batch), but the model still learns very quickly."
+        },
+        {
+          "type": "tf",
+          "q": "In momentum, the velocity (VdW, Vdb) is reset to 0 at the start of every mini-batch.",
+          "answer": false,
+          "explain": "Velocity is persistent across batches and epochs. This persistence gives momentum its inertia; it is only initialized to 0 once at the start of training."
+        },
+        {
+          "type": "tf",
+          "q": "RMSProp completely fixes the exploding gradient problem.",
+          "answer": false,
+          "explain": "RMSProp helps with exploding gradients (it scales by the gradient magnitude) but does not fix the problem."
+        },
+        {
+          "type": "tf",
+          "q": "Initializing all weights to 0 is a good choice for a feed-forward network with hidden layers.",
+          "answer": false,
+          "explain": "It causes the symmetry problem: all neurons compute and learn the same thing, so the model will not learn. (Zero init is fine only for logistic regression.)"
+        },
+        {
+          "type": "tf",
+          "q": "The symmetry problem only appears when all the weights are exactly 0.",
+          "answer": false,
+          "explain": "It appears whenever neurons start with the same values, even if they are not 0."
+        },
+        {
+          "type": "tf",
+          "q": "Adam combines Momentum and RMSProp.",
+          "answer": true,
+          "explain": "Adam (Adaptive Moment Estimation) uses an EWA of gradients (momentum) and an EWA of squared gradients (RMSProp)."
+        },
+        {
+          "type": "tf",
+          "q": "At test time, batch normalization uses an exponentially weighted average of the means and variances computed on the training mini-batches.",
+          "answer": true,
+          "explain": "At test time inputs are processed one by one, so there is no mini-batch to compute statistics from."
+        },
+        {
+          "type": "tf",
+          "q": "Gradient descent works perfectly with convex functions, but this is not always the case in deep learning.",
+          "answer": true,
+          "explain": "Deep learning cost surfaces have local minima, saddle points and pathological curvature, so plain GD can struggle."
+        }
+      ]
+    },
+    {
+      "id": "single-choice",
+      "title": "Single choice",
+      "type": "single",
+      "questions": [
+        {
+          "type": "single",
+          "q": "In an exponentially weighted average with β = 0.9, Vt is approximately an average over how many past values?",
+          "options": [
+            "≈ 2",
+            "≈ 50",
+            "≈ 10",
+            "≈ 100"
+          ],
+          "answer": 2,
+          "explain": "Vt ≈ average over 1/(1−β) values: 1/(1−0.9) = 10. β = 0.5 gives ≈ 2 and β = 0.98 gives ≈ 50."
+        },
+        {
+          "type": "single",
+          "q": "What is a mini-batch of size 1 called?",
+          "options": [
+            "Batch gradient descent",
+            "Stochastic gradient descent",
+            "Mini-batch stochastic gradient descent",
+            "Momentum"
+          ],
+          "answer": 1,
+          "explain": "Size m = batch GD, size 1 = stochastic GD (one random example). Anything in between is mini-batch GD."
+        },
+        {
+          "type": "single",
+          "q": "In RMSProp, if s_dw1 is large, what happens along w1?",
+          "options": [
+            "Movement along w1 is sped up",
+            "Movement along w1 is unchanged",
+            "Movement along w1 is slowed down",
+            "w1 is reset to 0"
+          ],
+          "answer": 2,
+          "explain": "The update divides dw1 by √s_dw1. A large s_dw1 means a smaller effective step (slowed down); a small s_dw2 means a bigger step (sped up)."
+        },
+        {
+          "type": "single",
+          "q": "What is the default value of the RMSProp factor ρ (and of β2 in Adam)?",
+          "options": [
+            "0.9",
+            "0.5",
+            "10⁻⁸",
+            "0.999"
+          ],
+          "answer": 3,
+          "explain": "ρ = β2 = 0.999. The tempting 0.9 is the default for the momentum factor β (β1 in Adam), and 10⁻⁸ is ε."
+        },
+        {
+          "type": "single",
+          "q": "The true class is class 1 (y = (1, 0, 0)) and the softmax output is (0.5, 0.25, 0.25). What is the categorical cross-entropy loss?",
+          "options": [
+            "0",
+            "≈ 0.693",
+            "≈ 1.386",
+            "+∞"
+          ],
+          "answer": 1,
+          "explain": "Only the true class term survives: −1·log(0.5) ≈ 0.693. Loss 0 needs a perfect prediction (1, 0, 0); +∞ happens when the true class gets probability 0."
+        },
+        {
+          "type": "single",
+          "q": "In practice, which quantity does batch normalization normalize?",
+          "options": [
+            "The activations a[l]",
+            "The weighted sums z[l]",
+            "The labels y",
+            "The weights W"
+          ],
+          "answer": 1,
+          "explain": "We normalize z[l], not a[l], over the current mini-batch, then apply z̃ = γ·z_norm + β."
+        },
+        {
+          "type": "single",
+          "q": "Why is zero initialization bad for a feed-forward network?",
+          "options": [
+            "It makes the weights too large",
+            "It causes saturation of the sigmoid",
+            "It makes all neurons learn the same thing (symmetry problem)",
+            "It makes the cost function non-convex"
+          ],
+          "answer": 2,
+          "explain": "With identical weights all neurons get the same activation and the same updates, so they are redundant. We want specialized neurons, hence random initialization."
+        },
+        {
+          "type": "single",
+          "q": "According to early stopping, where should training stop?",
+          "options": [
+            "When the training loss reaches 0",
+            "Where the validation loss is minimal, before it rises again",
+            "After exactly one epoch",
+            "When the validation loss is maximal"
+          ],
+          "answer": 1,
+          "explain": "Training loss keeps decreasing, but validation loss goes down then up. The minimum of the validation loss is the good trade-off for W."
+        },
+        {
+          "type": "single",
+          "q": "What is recommended when the training set has fewer than a few thousand examples?",
+          "options": [
+            "Mini-batch of 64",
+            "Batch mode",
+            "Stochastic GD with size 1",
+            "Mini-batch of 1024"
+          ],
+          "answer": 1,
+          "explain": "Mini-batches are useful when the dataset is very large. For small datasets, batch mode is fine. Otherwise use sizes like 64, 128, 256, 1024..."
+        },
+        {
+          "type": "single",
+          "q": "Why does Xavier initialization divide by n (the number of inputs)?",
+          "options": [
+            "Because Var(z) = Σ Var(wi·xi) grows with the number of inputs",
+            "To make all weights exactly equal",
+            "To avoid the symmetry problem",
+            "To normalize the labels"
+          ],
+          "answer": 0,
+          "explain": "For independent inputs the variance of z is the sum of the variances, so it increases with n. Dividing keeps it under control. Breaking symmetry is the job of random initialization, not of Xavier."
+        }
+      ]
+    },
+    {
+      "id": "multi-choice",
+      "title": "Multiple choice (select all)",
+      "type": "multi",
+      "questions": [
+        {
+          "type": "multi",
+          "q": "Gradient descent suffers from which problems? (select all)",
+          "options": [
+            "Local minima",
+            "Saddle points",
+            "Batch normalization",
+            "Pathological curvature"
+          ],
+          "answer": [
+            0,
+            1,
+            3
+          ],
+          "explain": "The slides list local minima, saddle points (minimum in one direction, maximum in another) and pathological curvature (zigzag in a narrow valley). Batch normalization is a technique, not a GD problem."
+        },
+        {
+          "type": "multi",
+          "q": "Which are the default Adam values? (select all)",
+          "options": [
+            "β1 = 0.9",
+            "β2 = 0.999",
+            "ε = 10⁻⁸",
+            "β1 = 0.999"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "Adam defaults: β1 = 0.9 (momentum), β2 = 0.999 (RMSProp), ε = 10⁻⁸. Only α must be tuned. β1 = 0.999 swaps the two factors."
+        },
+        {
+          "type": "multi",
+          "q": "Which of these help against vanishing gradients? (select all)",
+          "options": [
+            "Momentum",
+            "RMSProp",
+            "Random weight initialization (partial solution)",
+            "Setting all weights to 0"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "Momentum keeps updating even if the current gradient is tiny; RMSProp amplifies small gradients; weight initialization is a partial solution. Zero init causes symmetry."
+        },
+        {
+          "type": "multi",
+          "q": "Which statements about the mini-batch size are correct? (select all)",
+          "options": [
+            "It must fit in CPU/GPU memory",
+            "It is a hyper-parameter",
+            "It must always be 1",
+            "For a dataset under a few thousand examples, batch mode is used"
+          ],
+          "answer": [
+            0,
+            1,
+            3
+          ],
+          "explain": "Mini-batch size is a hyper-parameter bounded by memory. Size 1 is only the extreme case (stochastic GD), not a rule."
+        },
+        {
+          "type": "multi",
+          "q": "Which statements about batch normalization are correct? (select all)",
+          "options": [
+            "γ and β are trainable parameters",
+            "It normalizes z[l] using the mean and variance of the current mini-batch",
+            "At test time, it recomputes the mean and variance on each single input",
+            "At test time, it uses an EWA of the training means and variances"
+          ],
+          "answer": [
+            0,
+            1,
+            3
+          ],
+          "explain": "γ and β are learned. At test time inputs come one by one, so using the statistics of a single input is wrong; the EWA over training mini-batches is used."
+        }
+      ]
+    },
+    {
+      "id": "open-questions",
+      "title": "Open questions",
+      "type": "open",
+      "questions": [
+        {
+          "type": "open",
+          "q": "Why do we use mini-batch gradient descent instead of batch gradient descent?",
+          "answer": "On a huge dataset, batch GD updates the weights only after processing the whole dataset, so training is slow and the full data matrix takes a lot of memory. Mini-batch GD updates after each small batch, so learning is much faster and the batch fits in GPU memory.",
+          "explain": "Mention that the cost curve becomes noisy but still decreases overall, and that the mini-batch size is a hyper-parameter."
+        },
+        {
+          "type": "open",
+          "q": "Explain gradient descent with momentum and give its update equations.",
+          "answer": "It computes an exponentially weighted average of the gradients: VdW = β·VdW + (1−β)·dW and Vdb = β·Vdb + (1−β)·db, then updates W = W − α·VdW and b = b − α·Vdb. Oscillating directions cancel while the consistent direction accumulates; default β = 0.9.",
+          "explain": "Add that velocity persists across batches and epochs, and that it keeps updating even when the current gradient is tiny."
+        },
+        {
+          "type": "open",
+          "q": "Explain RMSProp and why it adapts the learning rate.",
+          "answer": "It keeps an EWA of squared gradients, s = ρ·s + (1−ρ)·dw², and updates w = w − α·dw/√(s+ε). Weights with consistently large gradients get a smaller step, those with small gradients a larger step, so each parameter gets its own learning rate. Default ρ = 0.999.",
+          "explain": "It also amplifies tiny gradients (helps vanishing gradients) and helps with, but does not fix, exploding gradients."
+        },
+        {
+          "type": "open",
+          "q": "Describe Adam and the role of bias correction.",
+          "answer": "Adam combines momentum (vt = β1·vt−1 + (1−β1)·dwt) and RMSProp (st = β2·st−1 + (1−β2)·dwt²). Since v0 = s0 = 0, they are biased toward 0 at the start, so we use v̂ = v/(1−β1^t) and ŝ = s/(1−β2^t), then w = w − α/(√ŝ + ε)·v̂.",
+          "explain": "Defaults: β1 = 0.9, β2 = 0.999, ε = 10⁻⁸; only α needs tuning."
+        },
+        {
+          "type": "open",
+          "q": "Why is initializing all the weights of a feed-forward network to 0 a problem, and what is the solution?",
+          "answer": "All neurons get the same activation and the same gradient updates, so they all learn the same thing (symmetry problem) and the model will not learn. Weights must be initialized randomly (small values, with normalized inputs) to break the symmetry.",
+          "explain": "The problem occurs with any identical values, not only 0. Zero init is acceptable for logistic regression."
+        },
+        {
+          "type": "open",
+          "q": "How does batch normalization work during training and at test time?",
+          "answer": "In training, for each mini-batch and each layer, we compute the mean and variance of z, normalize it, then apply z̃ = γ·z_norm + β with trainable γ and β. At test time, inputs are processed one by one, so we use an exponentially weighted average of the means and variances of the training mini-batches.",
+          "explain": "Remember that z (not a) is normalized, and that z̃ replaces z in forward propagation."
+        },
+        {
+          "type": "open",
+          "q": "Why use learning rate decay? Give two methods.",
+          "answer": "A fixed learning rate is suboptimal: a large one is useful early (far from the minimum) and a smaller one later to fine-tune the solution and avoid circling around it without converging. Methods: step decay (e.g. halve the rate every 10 epochs) and exponential decay.",
+          "explain": "The decay method and its parameter k are extra hyper-parameters."
+        }
+      ]
+    },
+    {
+      "id": "midterm-style",
+      "title": "Midterm style",
+      "type": "mixed",
+      "questions": [
+        {
+          "type": "tf",
+          "q": "True or False: In mini-batch gradient descent, one epoch is completed when all the mini-batches of the training set have been processed.",
+          "answer": true,
+          "explain": "An epoch is one full pass over the training set; each mini-batch gives one iteration (one weight update)."
+        },
+        {
+          "type": "tf",
+          "q": "True or False: Momentum accumulates the gradients of the past steps to determine the direction to go.",
+          "answer": true,
+          "explain": "This is the principle of momentum: instead of using only the current gradient, it uses an EWA of gradients."
+        },
+        {
+          "type": "tf",
+          "q": "True or False: In the softmax output layer, the outputs are independent sigmoid probabilities that need not sum to 1.",
+          "answer": false,
+          "explain": "Softmax computes ai = ti / Σ tj, so the outputs are in [0,1] and sum to 1, unlike independent sigmoids."
+        },
+        {
+          "type": "single",
+          "q": "Which optimizer divides the gradient by the root of an exponential average of its squares?",
+          "options": [
+            "Momentum",
+            "Batch gradient descent",
+            "RMSProp",
+            "Early stopping"
+          ],
+          "answer": 2,
+          "explain": "RMSProp uses η = α/√(s_dw + ε). Momentum averages the gradients themselves (not their squares), the other two are not optimizers of this type."
+        },
+        {
+          "type": "single",
+          "q": "In the exponentially weighted average Vt = β·Vt−1 + (1−β)·Tt, increasing β from 0.9 to 0.98 makes the curve:",
+          "options": [
+            "Noisier, averaging over fewer values",
+            "Smoother, averaging over more values",
+            "Unchanged",
+            "Equal to the raw data"
+          ],
+          "answer": 1,
+          "explain": "1/(1−β) goes from 10 to 50 values: a smoother curve that reacts more slowly to changes."
+        },
+        {
+          "type": "single",
+          "q": "In the vanishing/exploding gradient discussion, we have an exponential relationship p^L. What happens if p > 1?",
+          "options": [
+            "Vanishing",
+            "Exploding",
+            "Saturation",
+            "Nothing, it converges"
+          ],
+          "answer": 1,
+          "explain": "If p < 1 then p^L ≈ 0 (vanishing); if p > 1 it blows up (exploding). L is the number of layers, so the problem is worse in deep networks."
+        },
+        {
+          "type": "multi",
+          "q": "Select all the hyper-parameters introduced in this chapter.",
+          "options": [
+            "Mini-batch size",
+            "Momentum factor β",
+            "RMSProp factor ρ",
+            "The cost J(w) itself"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "Mini-batch size, β, ρ (plus Adam parameters, decay method and its parameters, architecture) are hyper-parameters. The cost is a function we minimize, not a hyper-parameter."
+        },
+        {
+          "type": "multi",
+          "q": "Which statements about data augmentation are correct? (select all)",
+          "options": [
+            "It creates more data from the data we already have",
+            "Flipping images is an example",
+            "The generated data must be appropriate for the task",
+            "It requires collecting new data from outside"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "Collecting more data is often not possible or easy; augmentation gets more data from what we have, as long as the generated data stays appropriate."
+        },
+        {
+          "type": "open",
+          "q": "Explain the difference between batch, stochastic and mini-batch stochastic gradient descent.",
+          "answer": "Batch GD uses all m examples per update; stochastic GD uses a single randomly chosen example (size 1); mini-batch stochastic GD uses a mini-batch of randomly chosen examples with a size between 1 and m.",
+          "explain": "In practice, 'SGD' usually means mini-batch SGD, whose size is not 1."
+        },
+        {
+          "type": "open",
+          "q": "Why does momentum help when the gradient is vanishing?",
+          "answer": "Without momentum, dW ≈ 0 means W stops updating. With momentum, V = β·V + (1−β)·dW ≈ β·V, so the stored velocity keeps the updates going even if the current gradient is tiny, helping escape plateaus.",
+          "explain": "This works because the velocity is persistent and not reset at each batch."
+        },
+        {
+          "type": "open",
+          "q": "A model has true class 1 and the softmax output is (0, 1, 0). Compute the loss and comment.",
+          "answer": "L = −1·log(0) − 0·log(1) − 0·log(0) = +∞. The model is confident and totally wrong, so the loss is infinite.",
+          "explain": "For comparison: (1, 0, 0) gives 0 and (0.5, 0.25, 0.25) gives ≈ 0.693."
+        }
+      ]
+    },
+    {
+      "id": "past-exam",
+      "title": "Last year's exam style",
+      "type": "mixed",
+      "questions": [
+        {
+          "type": "tf",
+          "q": "True or False: The cost function is computed on a single training example.",
+          "answer": false,
+          "explain": "The loss is computed for one example; the cost is the average of the losses over the examples used (the whole training set, or only the current mini-batch in mini-batch GD). Gradient descent minimizes the cost."
+        },
+        {
+          "type": "tf",
+          "q": "True or False: A loss function with smoother gradients can facilitate convergence.",
+          "answer": true,
+          "explain": "Smooth, well-behaved gradients give consistent steps downhill instead of jumps or flat regions, so optimization is more stable. Cross-entropy with sigmoid gives the clean gradient a − y, while a tiny gradient makes learning stall."
+        },
+        {
+          "type": "tf",
+          "q": "True or False: Dropout is a regularization technique used to reduce overfitting.",
+          "answer": true,
+          "explain": "Randomly turning neurons off during training prevents neurons from relying on specific partners and acts like averaging thinned networks. Like data augmentation and early stopping, it restricts complexity to generalize better."
+        },
+        {
+          "type": "single",
+          "q": "In neural networks, the symmetry problem appears when:",
+          "options": [
+            "The learning rate is too small",
+            "We initialize all the weights with the same value",
+            "The data is balanced",
+            "We use too many hidden layers"
+          ],
+          "answer": 1,
+          "explain": "With identical weights every neuron computes the same activation and gets the same gradient, so they stay identical and the layer is useless. Random initialization breaks the symmetry. A small learning rate only slows learning."
+        },
+        {
+          "type": "single",
+          "q": "To update the weights, gradient descent uses:",
+          "options": [
+            "The inverse of the data matrix",
+            "Random values",
+            "The number of layers",
+            "The partial derivatives of the cost with respect to each parameter"
+          ],
+          "answer": 3,
+          "explain": "The gradient is the vector of partial derivatives of the cost. Each one says how the cost changes when one parameter is nudged, and every parameter is moved against its own derivative."
+        },
+        {
+          "type": "multi",
+          "q": "Which activation functions have gradients close to 0 for large inputs (saturation)? (select all)",
+          "options": [
+            "Sigmoid",
+            "ReLU (for positive inputs)",
+            "Tanh",
+            "Identity"
+          ],
+          "answer": [
+            0,
+            2
+          ],
+          "explain": "Sigmoid and tanh flatten out at the extremes, so their derivative is almost 0, which causes vanishing gradients in deep networks. ReLU has a gradient of exactly 1 for positive inputs and identity has a constant gradient."
+        },
+        {
+          "type": "multi",
+          "q": "What can happen if the learning rate is very low? (select all)",
+          "options": [
+            "The loss diverges",
+            "Training is very slow",
+            "The loss oscillates around the minimum",
+            "Training may end before convergence"
+          ],
+          "answer": [
+            1,
+            3
+          ],
+          "explain": "Tiny steps barely move the parameters, so many iterations are needed and a fixed epoch budget may run out before the minimum. Divergence and oscillation are symptoms of a learning rate that is too high, which is why learning rate decay starts large and gets smaller."
+        },
+        {
+          "type": "open",
+          "q": "Why do we use the cross-entropy loss for classification?",
+          "answer": "Because it severely penalizes incorrect predictions, especially confident wrong ones: the loss is −log of the probability given to the true class, so it is 0 for a perfect prediction and tends to +∞ when that probability tends to 0.",
+          "explain": "Example from the softmax slides: (0.5, 0.25, 0.25) gives ≈ 0.693 and (0, 1, 0) with true class 1 gives +∞."
+        },
+        {
+          "type": "open",
+          "q": "Which optimization algorithm is commonly used to update the weights, and why?",
+          "answer": "Gradient descent, because it minimizes the cost function by moving the parameters step by step against the gradient. In practice for deep networks we use its mini-batch version, often with momentum, RMSProp or Adam.",
+          "explain": "The cost of a neural network is not convex, so plain GD can suffer from local minima, saddle points and pathological curvature, which the adaptive methods help to handle."
+        },
+        {
+          "type": "open",
+          "q": "What is regularization? Give two examples.",
+          "answer": "A technique that restricts the complexity of the model to reduce overfitting (a model very good on the training set but bad on unseen data). Examples: data augmentation, early stopping (stop where the validation loss is minimal), dropout, L2 penalty.",
+          "explain": "Overfitting is caused by model complexity: too many parameters compared to the amount of data, so the model memorizes noise."
+        },
+        {
+          "type": "open",
+          "q": "In logistic regression, why can training become very slow or stall when the weights are very large?",
+          "answer": "The sigmoid saturates: when the weights are too large, |z| is large, so σ(z) is almost 0 or 1 and its derivative σ(1−σ) is almost 0. The gradient vanishes, so the weight updates barely change anything.",
+          "explain": "Fixes from the chapter: small (random) initial weights and normalized inputs (small inputs + small weights avoid saturation)."
+        }
+      ]
+    }
+  ]
+}
