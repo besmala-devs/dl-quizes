@@ -1,0 +1,559 @@
+{
+  "chapter": {
+    "id": "ch7",
+    "title": "Regularization, Bias and Variance",
+    "emoji": "🎛️",
+    "description": "Bias/variance diagnosis, L2, L1, dropout, lab"
+  },
+  "quizzes": [
+    {
+      "id": "tf-basics",
+      "title": "True / False",
+      "type": "tf",
+      "questions": [
+        {
+          "type": "tf",
+          "q": "High variance means the model underfits the training set.",
+          "answer": false,
+          "explain": "High bias = underfitting (the model does not even learn the training set). High variance = overfitting (good on train, poor generalization to dev/test)."
+        },
+        {
+          "type": "tf",
+          "q": "A train error of 18% and a dev error of 19% always means the model has high bias.",
+          "answer": false,
+          "explain": "It depends on the human-level (optimal) error. If it is 0%, avoidable bias is 18% (high bias). If it is 16%, avoidable bias is only 2% and the model is good."
+        },
+        {
+          "type": "tf",
+          "q": "The train error tells us about bias, and the gap between dev error and train error tells us about variance.",
+          "answer": true,
+          "explain": "Bias is judged on the train set. Variance = dev error - train error."
+        },
+        {
+          "type": "tf",
+          "q": "In L2 regularization, the bias vectors b are penalized together with the weights W.",
+          "answer": false,
+          "explain": "Only W appears in the penalty. W has many entries while b has few, so penalizing b would change little. In the lab code, nothing is added for b1, b2, b3."
+        },
+        {
+          "type": "tf",
+          "q": "Dividing the L2 penalty by m makes it weaker when we have more training data.",
+          "answer": true,
+          "explain": "With the same weights, the penalty is 100 times smaller with 100 times more data. This is logical because more data already protects against overfitting."
+        },
+        {
+          "type": "tf",
+          "q": "L2 regularization is called weight decay because, at every update, W is first multiplied by a factor (1 - αλ/m) smaller than 1.",
+          "answer": true,
+          "explain": "W := (1 - αλ/m) W - α dW_data. The shrink factor is slightly below 1, so the weights decay at each step."
+        },
+        {
+          "type": "tf",
+          "q": "L2 tends to push some weights to exactly 0, while L1 shrinks all weights smoothly.",
+          "answer": false,
+          "explain": "It is the opposite. L1 (absolute values) tends to give sparse weights with some exactly 0. L2 (squares) shrinks all weights smoothly."
+        },
+        {
+          "type": "tf",
+          "q": "Dropout is applied again at test time, so that predictions are averaged over many random sub-networks.",
+          "answer": false,
+          "explain": "No dropout at test time: all neurons are used. This works thanks to the division by keep_prob during training, which keeps the expected activation the same."
+        },
+        {
+          "type": "tf",
+          "q": "In inverted dropout, dividing the surviving activations by keep_prob keeps their expected value unchanged.",
+          "answer": true,
+          "explain": "Shutting down neurons would reduce z of the next layer. Dividing by keep_prob compensates for it on average."
+        },
+        {
+          "type": "tf",
+          "q": "Inside a layer, dropout shuts down the neurons that have the highest complexity.",
+          "answer": false,
+          "explain": "The neurons are chosen randomly through the mask d. The only 'smart' choice is the keep_prob per layer, which can be lower for more complex layers."
+        },
+        {
+          "type": "tf",
+          "q": "Regularization typically lowers the training accuracy but should improve the test accuracy.",
+          "answer": true,
+          "explain": "It limits the ability of the network to memorize the training set, so train accuracy drops a bit while generalization improves."
+        },
+        {
+          "type": "tf",
+          "q": "Dropout is normally applied to the output layer of the network.",
+          "answer": false,
+          "explain": "It is applied to hidden layers. In the lab, layers 1 and 2 use dropout and the output layer does not."
+        },
+        {
+          "type": "tf",
+          "q": "If λ is too large, the weights are squeezed toward 0 and the model underfits.",
+          "answer": true,
+          "explain": "A boundary that is too simple gives high bias, with both train and test accuracy dropping. Too small a λ gives overfitting instead."
+        },
+        {
+          "type": "tf",
+          "q": "In the lab, calling np.random.seed(1) inside forward_propagation_with_dropout gives the same masks at every iteration, unlike real dropout.",
+          "answer": true,
+          "explain": "Real dropout draws new random masks at each iteration. Resetting the seed at every call can make the results behave differently from theory."
+        }
+      ]
+    },
+    {
+      "id": "single-core",
+      "title": "Single choice",
+      "type": "single",
+      "questions": [
+        {
+          "type": "single",
+          "q": "Human-level error is 0%. Train error is 0.5% and dev error is 10%. What is the diagnosis?",
+          "options": [
+            "High bias",
+            "High variance",
+            "High bias and high variance",
+            "Low bias and low variance"
+          ],
+          "answer": 1,
+          "explain": "Bias is about 0.5%, which is fine. The gap between train and dev is 9.5%, so the model overfits (high variance)."
+        },
+        {
+          "type": "single",
+          "q": "Human-level error is 16%. Train error is 18% and dev error is 19%. What is the diagnosis?",
+          "options": [
+            "High bias",
+            "High variance",
+            "High bias and high variance",
+            "Low bias and low variance"
+          ],
+          "answer": 3,
+          "explain": "Avoidable bias = 18 - 16 = 2% and variance = 19 - 18 = 1%. Both are small. With a human-level error of 0%, the same numbers would mean high bias."
+        },
+        {
+          "type": "single",
+          "q": "Human-level error is 16%. Train error is 30% and dev error is 45%. What is the diagnosis?",
+          "options": [
+            "High variance only",
+            "High bias only",
+            "Both high bias and high variance",
+            "Neither"
+          ],
+          "answer": 2,
+          "explain": "Avoidable bias = 14% and variance = 15%, so both problems are present."
+        },
+        {
+          "type": "single",
+          "q": "The train error is far above the acceptable error. What should you do first?",
+          "options": [
+            "Increase λ",
+            "Add dropout",
+            "Collect more dev data",
+            "Use a bigger network or train longer"
+          ],
+          "answer": 3,
+          "explain": "Bias is checked first: increase flexibility. Regularization (increase λ, dropout) is the remedy for high variance, and would make a high bias problem worse."
+        },
+        {
+          "type": "single",
+          "q": "Which expression is the L2-regularized cost of a neural network?",
+          "options": [
+            "(1/m) Σ L + (λ/2m) Σ ||W[l]||F²",
+            "(1/m) Σ L + λ Σ |W[l]|",
+            "(1/m) Σ L + (λ/2m) Σ (||W[l]||F² + ||b[l]||²)",
+            "(1/m) Σ L - (λ/2m) Σ ||W[l]||F²"
+          ],
+          "answer": 0,
+          "explain": "The penalty is the sum of the squares of all entries of every W (squared Frobenius norm) times λ/2m. B is the L1 shape, C penalizes b which is not done, and D has the wrong sign."
+        },
+        {
+          "type": "single",
+          "q": "With L2 regularization, what is dW[l]?",
+          "options": [
+            "(1/m) dZ[l] A[l-1]ᵀ",
+            "(1/m) dZ[l] A[l-1]ᵀ - (λ/m) W[l]",
+            "(1/m) dZ[l] A[l-1]ᵀ + (λ/m) W[l]",
+            "(1/m) dZ[l] A[l-1]ᵀ + λ W[l]²"
+          ],
+          "answer": 2,
+          "explain": "The derivative of (λ/2m) W² with respect to W is (λ/m) W, added to the usual gradient. A minus sign would make the weights grow."
+        },
+        {
+          "type": "single",
+          "q": "W = 3, m = 100, λ = 0.7, α = 0.3 and the data gradient is 0.05. What is W after one update with L2?",
+          "options": [
+            "2.985",
+            "3.0213",
+            "2.9",
+            "2.9787"
+          ],
+          "answer": 3,
+          "explain": "Penalty gradient = (0.7/100) × 3 = 0.021. Total gradient = 0.071. New W = 3 - 0.3 × 0.071 = 2.9787. Without L2 we would get 2.985."
+        },
+        {
+          "type": "single",
+          "q": "W = [2, -2, 1], m = 50, λ = 1. What is the L2 penalty (λ/2m) ||W||²?",
+          "options": [
+            "0.18",
+            "9",
+            "4.5",
+            "0.09"
+          ],
+          "answer": 3,
+          "explain": "||W||² = 4 + 4 + 1 = 9, so the penalty is 9 / (2 × 50) = 0.09. Forgetting the 2 gives 0.18."
+        },
+        {
+          "type": "single",
+          "q": "Inverted dropout with keep_prob = 0.8 is applied to a = [5, 10, 15, 20] with mask [1, 1, 0, 1]. What is the result?",
+          "options": [
+            "[5, 10, 0, 20]",
+            "[6.25, 12.5, 0, 25]",
+            "[4, 8, 0, 16]",
+            "[6.25, 12.5, 18.75, 25]"
+          ],
+          "answer": 1,
+          "explain": "Apply the mask: [5, 10, 0, 20]. Then divide by 0.8: [6.25, 12.5, 0, 25]. Option A forgets the rescaling."
+        },
+        {
+          "type": "single",
+          "q": "What is the correct step for dA[l] in backpropagation with dropout?",
+          "options": [
+            "dA = dA × keep_prob",
+            "dA = dA with no change",
+            "dA = dA ⊙ D / keep_prob, using the same mask as in the forward pass",
+            "dA = dA ⊙ (1 - D) / keep_prob"
+          ],
+          "answer": 2,
+          "explain": "A neuron shut down in the forward pass contributed nothing, so it gets no gradient (same mask). The survivors were scaled by 1/keep_prob, so the gradient is scaled the same way."
+        },
+        {
+          "type": "single",
+          "q": "Why does a smaller W give a simpler model when the activation is tanh?",
+          "options": [
+            "Because z stays small, where tanh is almost linear, so the network behaves like a linear model",
+            "Because tanh outputs become exactly 0",
+            "Because the number of neurons decreases",
+            "Because the learning rate is increased"
+          ],
+          "answer": 0,
+          "explain": "For small z, tanh is almost a straight line. If every layer is nearly linear, the whole network is nearly linear, so it cannot make wild wiggles. No neuron is removed."
+        },
+        {
+          "type": "single",
+          "q": "What does keep_prob = 0.86 mean in the lab?",
+          "options": [
+            "86% of the neurons are shut down",
+            "Each neuron of the hidden layers is kept with probability 0.86 and shut down with probability 14%",
+            "The learning rate is multiplied by 0.86",
+            "The output layer is kept with probability 0.86 at test time"
+          ],
+          "answer": 1,
+          "explain": "keep_prob is the probability of keeping a neuron. Option A reverses the meaning."
+        }
+      ]
+    },
+    {
+      "id": "multi-select",
+      "title": "Multiple answers",
+      "type": "multi",
+      "questions": [
+        {
+          "type": "multi",
+          "q": "Which statements about diagnosing bias and variance are correct? (select all)",
+          "options": [
+            "The train error tells us about bias",
+            "The gap between dev error and train error tells us about variance",
+            "The human-level error is the reference used to judge what a good error is",
+            "The dev error alone is enough to diagnose the problem"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "The dev error alone cannot say whether the problem is bias or variance. We need the train error and the human-level reference."
+        },
+        {
+          "type": "multi",
+          "q": "Which actions help against high variance? (select all)",
+          "options": [
+            "Add neurons to the layers",
+            "L2 regularization",
+            "Dropout",
+            "Get more training data"
+          ],
+          "answer": [
+            1,
+            2,
+            3
+          ],
+          "explain": "Adding neurons increases flexibility, which is a remedy for high bias and would worsen overfitting."
+        },
+        {
+          "type": "multi",
+          "q": "Which statements about λ are correct? (select all)",
+          "options": [
+            "Too low a value leads to overfitting (high variance)",
+            "Too high a value leads to underfitting (high bias)",
+            "It is a hyperparameter tuned on the dev set",
+            "It is learned by gradient descent like W"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "λ is chosen by us, not learned. W and b are the learned parameters."
+        },
+        {
+          "type": "multi",
+          "q": "Which statements about dropout are correct? (select all)",
+          "options": [
+            "It is used only during training",
+            "Activations are divided by keep_prob after applying the mask",
+            "The same mask is reused in backpropagation",
+            "At test time, neurons are dropped with probability 1 - keep_prob"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "At test time all neurons are used, with no dropout."
+        },
+        {
+          "type": "multi",
+          "q": "Why does dropout reduce overfitting? (select all)",
+          "options": [
+            "At each iteration the network is smaller, so less complex",
+            "No neuron is essential, so the decision is spread over many units",
+            "The network cannot rely on specific neurons",
+            "It increases the number of parameters to learn"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "Dropout does not add parameters. It reduces the reliance on specific units."
+        },
+        {
+          "type": "multi",
+          "q": "Which statements about L1 and L2 are correct? (select all)",
+          "options": [
+            "L1 penalizes the absolute values of the weights",
+            "L2 penalizes the squares of the weights",
+            "L2 pushes many weights to exactly 0",
+            "L1 tends to give sparse weights"
+          ],
+          "answer": [
+            0,
+            1,
+            3
+          ],
+          "explain": "Exactly-zero weights are typical of L1. L2 shrinks all weights smoothly. The lab uses L2."
+        },
+        {
+          "type": "multi",
+          "q": "Why is the L2 penalty divided by m? (select all)",
+          "options": [
+            "It stays on the same scale as the averaged loss",
+            "It fades as the amount of data grows",
+            "It keeps λ comparable across datasets of different sizes",
+            "It makes the biases regularized as well"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "The division by m has nothing to do with the biases, which are not penalized."
+        },
+        {
+          "type": "multi",
+          "q": "Which expectations about the lab experiments are correct? (select all)",
+          "options": [
+            "Regularization may lower the train accuracy",
+            "Test accuracy should improve compared with the baseline",
+            "With a very large λ the boundary can be over-smoothed (high bias)",
+            "The model works only if both lambd and keep_prob are non-zero"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "The function asserts lambd == 0 or keep_prob == 1: one technique at a time."
+        }
+      ]
+    },
+    {
+      "id": "open-qa",
+      "title": "Open questions",
+      "type": "open",
+      "questions": [
+        {
+          "type": "open",
+          "q": "Define bias and variance using N models trained on N different training sets from the same distribution.",
+          "answer": "Bias: how far the predictions are from the true values on average (the models are consistently wrong, low accuracy): underfitting. Variance: how much the performance changes from one model to another (the accuracies on a validation set are dispersed), because each model became specific to its own training set, including its outliers: overfitting.",
+          "explain": "High bias = underfitting, high variance = overfitting. Do not reverse them."
+        },
+        {
+          "type": "open",
+          "q": "How do you diagnose a model using the human-level error? Compare train 18% / dev 19% for a human-level error of 0% and of 16%.",
+          "answer": "Avoidable bias = train error - human-level error, and variance = dev error - train error. With 0%: avoidable bias 18%, so high bias. With 16%: avoidable bias 2% and variance 1%, so low bias and low variance. The same numbers give a different verdict.",
+          "explain": "Always give the reference before judging."
+        },
+        {
+          "type": "open",
+          "q": "What is the methodology to improve a deep network, and in which order?",
+          "answer": "1) Check the train performance: if bias is high, increase flexibility (more layers or neurons, train longer) and repeat. 2) Then check the dev performance: if variance is high, use regularization (L2, dropout) and, if possible, more data. Bias first, then variance, and we do not go back once bias is fixed.",
+          "explain": "Training is an iterative loop: Idea, Code, Experiment."
+        },
+        {
+          "type": "open",
+          "q": "Write the L2-regularized cost of a neural network and define each symbol.",
+          "answer": "J = (1/m) Σ L(ŷ(i), y(i)) + (λ/2m) Σ_l ||W[l]||F². m is the number of training examples, L the loss of one example, λ the regularization hyperparameter, and ||W[l]||F² the sum of the squares of all entries of W[l]. Biases are not penalized.",
+          "explain": "The first term fits the data, the second keeps the weights small."
+        },
+        {
+          "type": "open",
+          "q": "Show that L2 regularization makes the weights decrease.",
+          "answer": "The penalty adds (λ/m) W to dW, so W := W - α(dW_data + (λ/m) W) = (1 - αλ/m) W - α dW_data. Since 1 - αλ/m is smaller than 1 (and positive), W is multiplied by a factor below 1 at every step: weight decay.",
+          "explain": "Mention the condition 1 - αλ/m > 0, otherwise the weight would change sign at each step."
+        },
+        {
+          "type": "open",
+          "q": "Why is the penalty (λ/2m) and not just λ?",
+          "answer": "Dividing by m puts the penalty on the same scale as the averaged loss and makes it fade as the data grows, since more data already reduces overfitting. The factor 1/2 cancels the 2 coming from the derivative of W², giving a gradient of exactly (λ/m) W.",
+          "explain": "Example: with ||W||² = 10 and λ = 0.7, the penalty is 0.35 for m = 10 but 0.0035 for m = 1000."
+        },
+        {
+          "type": "open",
+          "q": "What is the effect of a very small and of a very large λ?",
+          "answer": "Too small (or 0): little constraint, complex wiggly boundary, overfitting (high variance). Too large: the weights are squeezed toward 0, the boundary is too simple and over-smoothed, underfitting (high bias) with train and test accuracy both dropping. A right value gives a smooth boundary and the best test accuracy.",
+          "explain": "λ is tuned on the dev set."
+        },
+        {
+          "type": "open",
+          "q": "Explain inverted dropout: the steps, why we divide by keep_prob, and what happens at test time.",
+          "answer": "For each hidden layer, build a random mask D (1 with probability keep_prob, else 0), compute A = A × D to shut neurons down, then A = A / keep_prob. The division keeps the expected value of the activations unchanged, since shutting neurons down would reduce the next z. At test time nothing is dropped: all neurons are used, and no correction is needed.",
+          "explain": "In backpropagation, reuse the same mask and divide by keep_prob too."
+        },
+        {
+          "type": "open",
+          "q": "Why does dropout reduce overfitting, and how can keep_prob be chosen?",
+          "answer": "At each iteration the network is smaller (less complexity) and no neuron is essential, so the decision is spread out instead of relying on specific units. keep_prob is a hyperparameter that can differ per layer: lower values for the more complex layers, and almost never dropout on the input layer. Use dropout only when facing overfitting.",
+          "explain": "It is very successful in computer vision."
+        }
+      ]
+    },
+    {
+      "id": "midterm-style",
+      "title": "Midterm style",
+      "type": "mixed",
+      "questions": [
+        {
+          "type": "tf",
+          "q": "To decide whether a train error of 18% and a dev error of 19% is good, we need the human-level error as a reference.",
+          "answer": true,
+          "explain": "The human-level (optimal) error defines what a good error is, and gives the avoidable bias."
+        },
+        {
+          "type": "tf",
+          "q": "With L2 regularization, dW[l] gets an additional term (λ/m) W[l], while db[l] is unchanged.",
+          "answer": true,
+          "explain": "Only W is penalized. The derivative of (λ/2m) ||W||² is (λ/m) W."
+        },
+        {
+          "type": "tf",
+          "q": "Dropout should be switched on by default for every network.",
+          "answer": false,
+          "explain": "Use dropout only when facing overfitting. It is not a default switch."
+        },
+        {
+          "type": "single",
+          "q": "Human-level error is 1%. Train error is 2% and dev error is 12%. What is the best next step?",
+          "options": [
+            "Use a bigger network",
+            "Train for longer",
+            "Add regularization (L2 or dropout) or collect more data",
+            "Do nothing, the model is good"
+          ],
+          "answer": 2,
+          "explain": "Avoidable bias is about 1% (fine) and variance is 10%, so the problem is high variance. Bigger networks and longer training are for high bias."
+        },
+        {
+          "type": "single",
+          "q": "In the lab, α = 0.3, λ = 0.7 and m = 211. What is the shrink factor 1 - αλ/m applied to each weight?",
+          "options": [
+            "0.7",
+            "0.79",
+            "0.21",
+            "About 0.999"
+          ],
+          "answer": 3,
+          "explain": "αλ/m = 0.21 / 211 ≈ 0.001, so the factor is about 0.999: tiny per step, but strong over 30,000 iterations."
+        },
+        {
+          "type": "single",
+          "q": "What happens to dropout at test time?",
+          "options": [
+            "The mask is drawn with keep_prob = 0.5",
+            "Dropout is not applied: all neurons are used",
+            "Only the output layer is kept",
+            "Half of the weights are set to 0"
+          ],
+          "answer": 1,
+          "explain": "No dropout at test time. The division by keep_prob during training already makes the expected values match."
+        },
+        {
+          "type": "multi",
+          "q": "Train error 15%, dev error 16%, human-level error 1%. Which statements are correct? (select all)",
+          "options": [
+            "Avoidable bias is 14%",
+            "Variance is only 1%",
+            "The first action should be to increase the flexibility of the model",
+            "Adding dropout is the right first action"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "The problem is high bias (underfitting). Regularization is for high variance and would not help."
+        },
+        {
+          "type": "multi",
+          "q": "Which statements about dropout backpropagation are correct? (select all)",
+          "options": [
+            "A neuron shut down in the forward pass receives no gradient",
+            "The same mask as in the forward pass is used",
+            "dA is divided by keep_prob",
+            "The masks are generated again, independently from the forward pass"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "The masks are saved in the cache during the forward pass and reused."
+        },
+        {
+          "type": "open",
+          "q": "W = [2, -2, 1], m = 50, λ = 1, α = 0.5. Compute the L2 penalty, the gradient contribution (λ/m) W, and the update of W assuming a zero data gradient.",
+          "answer": "||W||² = 9, penalty = 9 / (2 × 50) = 0.09. Gradient contribution = 0.02 × [2, -2, 1] = [0.04, -0.04, 0.02]. Update: W - 0.5 × [0.04, -0.04, 0.02] = [1.98, -1.98, 0.99], which is the same as multiplying W by (1 - 0.01) = 0.99.",
+          "explain": "The update shows weight decay clearly: every weight shrinks by 1%."
+        },
+        {
+          "type": "open",
+          "q": "Apply inverted dropout with keep_prob = 0.8 to a = [5, 10, 15, 20] with mask [1, 1, 0, 1]. Explain why the rescaling is needed.",
+          "answer": "After the mask: [5, 10, 0, 20]. After dividing by 0.8: [6.25, 12.5, 0, 25]. The rescaling keeps the expected activation equal to its value without dropout, so the next layer's z is not reduced and no correction is needed at test time.",
+          "explain": "One random sample can differ from the no-dropout value, but the average over many masks matches it."
+        },
+        {
+          "type": "open",
+          "q": "Regularization lowered the training accuracy of your network. Is that a problem?",
+          "answer": "No. Regularization limits the ability of the network to memorize the training set, so train accuracy drops a bit, but test accuracy should improve. A model is judged on its generalization (test) performance, not on its training accuracy.",
+          "explain": "If both train and test drop a lot, λ may be too large (underfitting)."
+        }
+      ]
+    }
+  ]
+}
