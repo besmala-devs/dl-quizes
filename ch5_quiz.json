@@ -1,0 +1,321 @@
+{
+  "chapter": {
+    "id": "ch5",
+    "title": "Logistic Regression",
+    "emoji": "🐱",
+    "description": "Sigmoid, cross-entropy, gradients, gradient descent"
+  },
+  "quizzes": [
+    {
+      "id": "tf-basics",
+      "title": "Basics and sigmoid",
+      "type": "tf",
+      "questions": [
+        {
+          "type": "tf",
+          "q": "Logistic regression outputs a class label directly.",
+          "answer": false,
+          "explain": "It outputs a probability a = σ(wᵀx + b). The label comes from a threshold (a > 0.5)."
+        },
+        {
+          "type": "tf",
+          "q": "σ(0) = 0.5, so the model predicts class 1 exactly when z = wᵀx + b > 0.",
+          "answer": true,
+          "explain": "σ(z) > 0.5 ⇔ z > 0. The decision boundary is the hyperplane wᵀx + b = 0."
+        },
+        {
+          "type": "tf",
+          "q": "The gradient dw has the same shape as w.",
+          "answer": true,
+          "explain": "A gradient always has the shape of the variable it is the gradient of: dw is (nₓ, 1)."
+        },
+        {
+          "type": "tf",
+          "q": "Initializing w = 0 and b = 0 is fine for logistic regression.",
+          "answer": true,
+          "explain": "The cost is convex, so any start works. (Not fine for hidden layers: symmetry problem.)"
+        },
+        {
+          "type": "tf",
+          "q": "A bigger learning rate always makes gradient descent converge faster.",
+          "answer": false,
+          "explain": "Too large an α overshoots, oscillates or diverges. Too small is slow."
+        }
+      ]
+    },
+    {
+      "id": "single-core",
+      "title": "Formulas and shapes",
+      "type": "single",
+      "questions": [
+        {
+          "type": "single",
+          "q": "Which loss is used for logistic regression?",
+          "options": [
+            "Squared error ½(ŷ − y)²",
+            "Binary cross-entropy",
+            "Hinge loss",
+            "Absolute error"
+          ],
+          "answer": 1,
+          "explain": "−[y ln a + (1−y) ln(1−a)]: convex with sigmoid and a non-vanishing gradient."
+        },
+        {
+          "type": "single",
+          "q": "With nₓ features and m examples, what is the shape of X in the lecture's convention?",
+          "options": [
+            "(m, nₓ)",
+            "(nₓ, m)",
+            "(1, m)",
+            "(nₓ, 1)"
+          ],
+          "answer": 1,
+          "explain": "Examples are stacked as columns, so X is (nₓ, m)."
+        },
+        {
+          "type": "single",
+          "q": "For cross-entropy with a sigmoid output, dz = ?",
+          "options": [
+            "a(1 − a)",
+            "y − a",
+            "a − y",
+            "x(a − y)"
+          ],
+          "answer": 2,
+          "explain": "Chain rule: (−y/a + (1−y)/(1−a)) · a(1−a) = a − y."
+        },
+        {
+          "type": "single",
+          "q": "What is the maximum value of σ′(z)?",
+          "options": [
+            "1",
+            "0.5",
+            "0.25",
+            "0"
+          ],
+          "answer": 2,
+          "explain": "σ′ = σ(1−σ), maximal at σ = 0.5 (z = 0): 0.5 × 0.5 = 0.25."
+        },
+        {
+          "type": "single",
+          "q": "A 28×28 RGB image is flattened into a feature vector. What is nₓ?",
+          "options": [
+            "784",
+            "2352",
+            "1568",
+            "28"
+          ],
+          "answer": 1,
+          "explain": "28 × 28 × 3 = 2352."
+        },
+        {
+          "type": "single",
+          "q": "m = 1000, batch size 50, 30 epochs. How many parameter updates?",
+          "options": [
+            "30",
+            "20",
+            "600",
+            "30 000"
+          ],
+          "answer": 2,
+          "explain": "1000/50 = 20 iterations per epoch, so 20 × 30 = 600."
+        }
+      ]
+    },
+    {
+      "id": "multi-concepts",
+      "title": "Select all that apply",
+      "type": "multi",
+      "questions": [
+        {
+          "type": "multi",
+          "q": "Why is cross-entropy preferred over squared error with a sigmoid? (select all)",
+          "options": [
+            "The cost is convex",
+            "The gradient a − y does not vanish when the model is very wrong",
+            "It is the negative log-likelihood of a Bernoulli model",
+            "It gives a smaller cost on confident mistakes"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "It punishes confident mistakes MORE (−ln → ∞), the opposite of the last option."
+        },
+        {
+          "type": "multi",
+          "q": "Which of these are hyperparameters? (select all)",
+          "options": [
+            "Learning rate α",
+            "Number of iterations",
+            "Batch size",
+            "The weights w"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "Hyperparameters are chosen by you (tuned on a dev set). w and b are learned."
+        },
+        {
+          "type": "multi",
+          "q": "Why not use the normal equation w = (XᵀX)⁻¹XᵀY? (select all)",
+          "options": [
+            "XᵀX may not be invertible",
+            "Inversion costs about O(d³)",
+            "Logistic regression has no closed form",
+            "It gives a worse minimum than gradient descent"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "For linear regression it does give the exact minimum when it exists; the problem is cost, singularity and no closed form for logistic."
+        }
+      ]
+    },
+    {
+      "id": "open-core",
+      "title": "Explain in your own words",
+      "type": "open",
+      "questions": [
+        {
+          "type": "open",
+          "q": "What is the difference between the loss and the cost function?",
+          "answer": "The loss is the error on ONE training example. The cost J is the average of the losses over the whole training set: J = (1/m) Σ L(ŷ⁽ⁱ⁾, y⁽ⁱ⁾). Training minimizes the cost.",
+          "explain": "Don't confuse it with computational cost (efficiency). The cost function measures effectiveness."
+        },
+        {
+          "type": "open",
+          "q": "Derive dz = a − y for the cross-entropy loss with a = σ(z).",
+          "answer": "dL/da = −y/a + (1−y)/(1−a) and da/dz = a(1−a). Chain rule: dL/dz = (−y/a + (1−y)/(1−a)) · a(1−a) = −y(1−a) + (1−y)a = a − y.",
+          "explain": "Then dw = x(a − y) and db = a − y."
+        },
+        {
+          "type": "open",
+          "q": "Explain the role of the derivative and of the learning rate α in gradient descent.",
+          "answer": "The derivative is the slope of the cost: it shows which direction increases J, so we step in the opposite direction: w := w − α ∂J/∂w. α sets the step size: too small is slow, too large oscillates or diverges. It is a hyperparameter chosen by us.",
+          "explain": "Monitor the learning curve: smooth decrease is good, zig-zag means α too big."
+        }
+      ]
+    },
+    {
+      "id": "midterm-guess",
+      "title": "Last year's midterm (reconstructed)",
+      "type": "mixed",
+      "questions": [
+        {
+          "type": "tf",
+          "q": "The cost function is computed on a single training example.",
+          "answer": false,
+          "explain": "The loss is for one example; the cost is the average of the losses over the training set."
+        },
+        {
+          "type": "tf",
+          "q": "A loss function with smoother gradients can facilitate convergence.",
+          "answer": true,
+          "explain": "Steps point consistently downhill. Example: cross-entropy + sigmoid gives the clean gradient a − y."
+        },
+        {
+          "type": "tf",
+          "q": "The output of ReLU lies between −1 and 1.",
+          "answer": false,
+          "explain": "ReLU = max(0, z) ∈ [0, +∞). The range (−1, 1) is tanh."
+        },
+        {
+          "type": "tf",
+          "q": "In logistic regression, a feature whose weight is 0 has no effect on the decision.",
+          "answer": true,
+          "explain": "z = w₁x₁ + … + b, so a term with wⱼ = 0 contributes nothing."
+        },
+        {
+          "type": "single",
+          "q": "A network predicts the temperature of a city. Which output activation fits?",
+          "options": [
+            "Sigmoid",
+            "ReLU",
+            "Softmax",
+            "Identity (linear)"
+          ],
+          "answer": 3,
+          "explain": "A temperature can be any real number, including negative ones."
+        },
+        {
+          "type": "single",
+          "q": "A network predicts the speed of a car (never negative). Best output activation?",
+          "options": [
+            "Tanh",
+            "Sigmoid",
+            "ReLU",
+            "Softmax"
+          ],
+          "answer": 2,
+          "explain": "Speed is in [0, ∞), exactly the range of ReLU."
+        },
+        {
+          "type": "single",
+          "q": "What is the main limitation of linear regression?",
+          "options": [
+            "It cannot use gradient descent",
+            "It always overfits",
+            "It needs many layers",
+            "It assumes a linear relationship between variables"
+          ],
+          "answer": 3,
+          "explain": "ŷ = wᵀx + b only models straight lines or hyperplanes. Neural networks add non-linear activations."
+        },
+        {
+          "type": "multi",
+          "q": "Which activations have gradients close to 0 for large inputs? (select all)",
+          "options": [
+            "Sigmoid",
+            "Tanh",
+            "ReLU (positive inputs)",
+            "Identity"
+          ],
+          "answer": [
+            0,
+            1
+          ],
+          "explain": "Sigmoid and tanh saturate, causing vanishing gradients. ReLU has gradient 1 for z > 0."
+        },
+        {
+          "type": "multi",
+          "q": "What can happen if the learning rate is very low? (select all)",
+          "options": [
+            "Training is very slow",
+            "Training may stop before convergence",
+            "The loss diverges",
+            "The loss oscillates around the minimum"
+          ],
+          "answer": [
+            0,
+            1
+          ],
+          "explain": "Divergence and oscillation are symptoms of a learning rate that is too HIGH."
+        },
+        {
+          "type": "open",
+          "q": "Why do we use the cross-entropy loss for classification?",
+          "answer": "It severely penalizes wrong predictions, especially confident ones: the loss is −ln p, 0.105 for p = 0.9 but 4.6 for p = 0.01 and → ∞ as p → 0. It is also the negative log-likelihood, convex with sigmoid, and gives the gradient a − y.",
+          "explain": "Good exam answer: mention punishment of confident errors first, then likelihood and gradient."
+        },
+        {
+          "type": "open",
+          "q": "Why do we prefer gradient descent over computing the solution directly?",
+          "answer": "We avoid the matrix inverse: it is expensive (about cubic in the number of features), may not exist, and can be unstable. Gradient descent scales to many features and works for models with no closed form, like logistic regression and neural networks.",
+          "explain": ""
+        },
+        {
+          "type": "open",
+          "q": "Why can training stall when the weights are very large in logistic regression?",
+          "answer": "Large weights make |z| large, so the sigmoid saturates (σ ≈ 0 or 1). Its derivative σ(1−σ) is almost 0: a vanishing gradient, so updates barely change anything. Fixes: small initial weights, regularization, feature scaling.",
+          "explain": ""
+        }
+      ]
+    }
+  ]
+}
