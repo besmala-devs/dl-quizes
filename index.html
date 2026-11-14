@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study quizzes</title>
+<style>
+:root{--bg:#fbf8f6;--card:#fff;--ink:#4a4458;--muted:#8d869a;--line:#eee7ee;--mint:#d3eee2;--lav:#dcd6f5;--sky:#d4e8f7;--peach:#fbe3d0;--pink:#f6d6e0;--ok:#bfe8d4;--bad:#f7cdd3}
+@media(prefers-color-scheme:dark){:root{--bg:#1f1d27;--card:#2a2734;--ink:#ece8f5;--muted:#a49db3;--line:#3a3646;--mint:#35534a;--lav:#443f66;--sky:#34495c;--peach:#5c4636;--pink:#5c3b49;--ok:#2f5a49;--bad:#613843}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 ui-rounded,"Nunito","Segoe UI",system-ui,sans-serif}
+#app{max-width:680px;margin:0 auto;padding:40px 20px 80px}
+h1{font-size:2rem;margin:0 0 4px;font-weight:700}
+h2{font-size:1.25rem;line-height:1.4;margin:14px 0 18px;font-weight:600}
+h3{font-size:1rem;margin:28px 0 10px;color:var(--muted);font-weight:600}
+.sub{color:var(--muted);margin:0 0 28px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+button,.btn{font:inherit;color:inherit;cursor:pointer}
+.card{display:flex;flex-direction:column;gap:4px;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:20px;padding:18px}
+.card:hover,.opt:hover:not(:disabled){border-color:var(--lav)}
+.card small{color:var(--muted)}
+.em{font-size:1.8rem}
+.row{display:flex;align-items:center;gap:12px}.row .card{flex:1;flex-direction:row;align-items:center;justify-content:space-between}
+.chip{border-radius:999px;padding:3px 12px;font-size:.8rem;background:var(--lav);color:var(--ink)}
+.mint{background:var(--mint)}.lav{background:var(--lav)}.sky{background:var(--sky)}.peach{background:var(--peach)}.pink{background:var(--pink)}
+.btn{display:inline-block;border:0;border-radius:999px;padding:10px 22px;background:var(--lav);margin-top:16px}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted);padding:6px 16px;margin:0}
+.top{display:flex;justify-content:space-between;align-items:center;color:var(--muted);margin-bottom:12px}
+.bar{height:6px;background:var(--line);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--lav);transition:width .3s}
+.qbox{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:24px;margin-top:20px}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;background:transparent;border:1.5px solid var(--line);border-radius:14px;padding:12px 16px;color:var(--ink)}
+.opt.sel{border-color:var(--lav);background:var(--lav)}
+.opt.ok{background:var(--ok);border-color:var(--ok)}.opt.bad{background:var(--bad);border-color:var(--bad)}
+textarea{width:100%;min-height:110px;border:1.5px solid var(--line);border-radius:14px;padding:12px;font:inherit;background:transparent;color:var(--ink);resize:vertical}
+.fb{margin-top:18px;padding:14px 16px;border-radius:14px;background:var(--bg)}
+.rate{display:flex;gap:8px;flex-wrap:wrap}.rate .btn{margin-top:10px}
+.big{font-size:3rem;font-weight:700;margin:10px 0}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+const BUILTIN=[{"chapter": {"id": "ch5", "title": "Logistic Regression", "emoji": "🐱", "description": "Sigmoid, cross-entropy, gradients, gradient descent"}, "quizzes": [{"id": "tf-basics", "title": "Basics and sigmoid", "type": "tf", "questions": [{"type": "tf", "q": "Logistic regression outputs a class label directly.", "answer": false, "explain": "It outputs a probability a = σ(wᵀx + b). The label comes from a threshold (a > 0.5)."}, {"type": "tf", "q": "σ(0) = 0.5, so the model predicts class 1 exactly when z = wᵀx + b > 0.", "answer": true, "explain": "σ(z) > 0.5 ⇔ z > 0. The decision boundary is the hyperplane wᵀx + b = 0."}, {"type": "tf", "q": "The gradient dw has the same shape as w.", "answer": true, "explain": "A gradient always has the shape of the variable it is the gradient of: dw is (nₓ, 1)."}, {"type": "tf", "q": "Initializing w = 0 and b = 0 is fine for logistic regression.", "answer": true, "explain": "The cost is convex, so any start works. (Not fine for hidden layers: symmetry problem.)"}, {"type": "tf", "q": "A bigger learning rate always makes gradient descent converge faster.", "answer": false, "explain": "Too large an α overshoots, oscillates or diverges. Too small is slow."}]}, {"id": "single-core", "title": "Formulas and shapes", "type": "single", "questions": [{"type": "single", "q": "Which loss is used for logistic regression?", "options": ["Squared error ½(ŷ − y)²", "Binary cross-entropy", "Hinge loss", "Absolute error"], "answer": 1, "explain": "−[y ln a + (1−y) ln(1−a)]: convex with sigmoid and a non-vanishing gradient."}, {"type": "single", "q": "With nₓ features and m examples, what is the shape of X in the lecture's convention?", "options": ["(m, nₓ)", "(nₓ, m)", "(1, m)", "(nₓ, 1)"], "answer": 1, "explain": "Examples are stacked as columns, so X is (nₓ, m)."}, {"type": "single", "q": "For cross-entropy with a sigmoid output, dz = ?", "options": ["a(1 − a)", "y − a", "a − y", "x(a − y)"], "answer": 2, "explain": "Chain rule: (−y/a + (1−y)/(1−a)) · a(1−a) = a − y."}, {"type": "single", "q": "What is the maximum value of σ′(z)?", "options": ["1", "0.5", "0.25", "0"], "answer": 2, "explain": "σ′ = σ(1−σ), maximal at σ = 0.5 (z = 0): 0.5 × 0.5 = 0.25."}, {"type": "single", "q": "A 28×28 RGB image is flattened into a feature vector. What is nₓ?", "options": ["784", "2352", "1568", "28"], "answer": 1, "explain": "28 × 28 × 3 = 2352."}, {"type": "single", "q": "m = 1000, batch size 50, 30 epochs. How many parameter updates?", "options": ["30", "20", "600", "30 000"], "answer": 2, "explain": "1000/50 = 20 iterations per epoch, so 20 × 30 = 600."}]}, {"id": "multi-concepts", "title": "Select all that apply", "type": "multi", "questions": [{"type": "multi", "q": "Why is cross-entropy preferred over squared error with a sigmoid? (select all)", "options": ["The cost is convex", "The gradient a − y does not vanish when the model is very wrong", "It is the negative log-likelihood of a Bernoulli model", "It gives a smaller cost on confident mistakes"], "answer": [0, 1, 2], "explain": "It punishes confident mistakes MORE (−ln → ∞), the opposite of the last option."}, {"type": "multi", "q": "Which of these are hyperparameters? (select all)", "options": ["Learning rate α", "Number of iterations", "Batch size", "The weights w"], "answer": [0, 1, 2], "explain": "Hyperparameters are chosen by you (tuned on a dev set). w and b are learned."}, {"type": "multi", "q": "Why not use the normal equation w = (XᵀX)⁻¹XᵀY? (select all)", "options": ["XᵀX may not be invertible", "Inversion costs about O(d³)", "Logistic regression has no closed form", "It gives a worse minimum than gradient descent"], "answer": [0, 1, 2], "explain": "For linear regression it does give the exact minimum when it exists; the problem is cost, singularity and no closed form for logistic."}]}, {"id": "open-core", "title": "Explain in your own words", "type": "open", "questions": [{"type": "open", "q": "What is the difference between the loss and the cost function?", "answer": "The loss is the error on ONE training example. The cost J is the average of the losses over the whole training set: J = (1/m) Σ L(ŷ⁽ⁱ⁾, y⁽ⁱ⁾). Training minimizes the cost.", "explain": "Don't confuse it with computational cost (efficiency). The cost function measures effectiveness."}, {"type": "open", "q": "Derive dz = a − y for the cross-entropy loss with a = σ(z).", "answer": "dL/da = −y/a + (1−y)/(1−a) and da/dz = a(1−a). Chain rule: dL/dz = (−y/a + (1−y)/(1−a)) · a(1−a) = −y(1−a) + (1−y)a = a − y.", "explain": "Then dw = x(a − y) and db = a − y."}, {"type": "open", "q": "Explain the role of the derivative and of the learning rate α in gradient descent.", "answer": "The derivative is the slope of the cost: it shows which direction increases J, so we step in the opposite direction: w := w − α ∂J/∂w. α sets the step size: too small is slow, too large oscillates or diverges. It is a hyperparameter chosen by us.", "explain": "Monitor the learning curve: smooth decrease is good, zig-zag means α too big."}]}, {"id": "midterm-guess", "title": "Last year's midterm (reconstructed)", "type": "mixed", "questions": [{"type": "tf", "q": "The cost function is computed on a single training example.", "answer": false, "explain": "The loss is for one example; the cost is the average of the losses over the training set."}, {"type": "tf", "q": "A loss function with smoother gradients can facilitate convergence.", "answer": true, "explain": "Steps point consistently downhill. Example: cross-entropy + sigmoid gives the clean gradient a − y."}, {"type": "tf", "q": "The output of ReLU lies between −1 and 1.", "answer": false, "explain": "ReLU = max(0, z) ∈ [0, +∞). The range (−1, 1) is tanh."}, {"type": "tf", "q": "In logistic regression, a feature whose weight is 0 has no effect on the decision.", "answer": true, "explain": "z = w₁x₁ + … + b, so a term with wⱼ = 0 contributes nothing."}, {"type": "single", "q": "A network predicts the temperature of a city. Which output activation fits?", "options": ["Sigmoid", "ReLU", "Softmax", "Identity (linear)"], "answer": 3, "explain": "A temperature can be any real number, including negative ones."}, {"type": "single", "q": "A network predicts the speed of a car (never negative). Best output activation?", "options": ["Tanh", "Sigmoid", "ReLU", "Softmax"], "answer": 2, "explain": "Speed is in [0, ∞), exactly the range of ReLU."}, {"type": "single", "q": "What is the main limitation of linear regression?", "options": ["It cannot use gradient descent", "It always overfits", "It needs many layers", "It assumes a linear relationship between variables"], "answer": 3, "explain": "ŷ = wᵀx + b only models straight lines or hyperplanes. Neural networks add non-linear activations."}, {"type": "multi", "q": "Which activations have gradients close to 0 for large inputs? (select all)", "options": ["Sigmoid", "Tanh", "ReLU (positive inputs)", "Identity"], "answer": [0, 1], "explain": "Sigmoid and tanh saturate, causing vanishing gradients. ReLU has gradient 1 for z > 0."}, {"type": "multi", "q": "What can happen if the learning rate is very low? (select all)", "options": ["Training is very slow", "Training may stop before convergence", "The loss diverges", "The loss oscillates around the minimum"], "answer": [0, 1], "explain": "Divergence and oscillation are symptoms of a learning rate that is too HIGH."}, {"type": "open", "q": "Why do we use the cross-entropy loss for classification?", "answer": "It severely penalizes wrong predictions, especially confident ones: the loss is −ln p, 0.105 for p = 0.9 but 4.6 for p = 0.01 and → ∞ as p → 0. It is also the negative log-likelihood, convex with sigmoid, and gives the gradient a − y.", "explain": "Good exam answer: mention punishment of confident errors first, then likelihood and gradient."}, {"type": "open", "q": "Why do we prefer gradient descent over computing the solution directly?", "answer": "We avoid the matrix inverse: it is expensive (about cubic in the number of features), may not exist, and can be unstable. Gradient descent scales to many features and works for models with no closed form, like logistic regression and neural networks.", "explain": ""}, {"type": "open", "q": "Why can training stall when the weights are very large in logistic regression?", "answer": "Large weights make |z| large, so the sigmoid saturates (σ ≈ 0 or 1). Its derivative σ(1−σ) is almost 0: a vanishing gradient, so updates barely change anything. Fixes: small initial weights, regularization, feature scaling.", "explain": ""}]}]}];
+const TYPES={tf:["True / False","mint"],single:["Multiple choice","lav"],multi:["Several answers","sky"],open:["Open-ended","peach"],mixed:["Midterm style","pink"]};
+const app=document.getElementById('app');
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const get=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
+const put=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+let imported=get('qz-imported',[]),best=get('qz-best',{}),S={};
+const chapters=()=>{const m=new Map();[...BUILTIN,...imported].forEach(c=>m.set(c.chapter.id,c));return[...m.values()]};
+const chap=()=>chapters().find(c=>c.chapter.id===S.ch);
+
+function home(){
+  S={};
+  app.innerHTML=`<h1>Study quizzes</h1><p class="sub">Choose a chapter.</p><div class="grid">${chapters().map(c=>`<button class="card" data-ch="${esc(c.chapter.id)}"><span class="em">${esc(c.chapter.emoji||'📘')}</span><b>${esc(c.chapter.title)}</b><small>${esc(c.chapter.description)}</small><small>${c.quizzes.length} quizzes</small></button>`).join('')}</div>
+  <label class="btn ghost" style="margin-top:28px">Import chapter JSON<input type="file" id="imp" accept=".json" multiple hidden></label>`;
+}
+function openChapter(id){
+  S={ch:id};const c=chap();
+  const groups=Object.keys(TYPES).map(t=>[t,c.quizzes.map((q,i)=>[q,i]).filter(([q])=>q.type===t)]).filter(g=>g[1].length);
+  app.innerHTML=`<button class="btn ghost" data-act="home">← Chapters</button><h1 style="margin-top:20px">${esc(c.chapter.emoji||'')} ${esc(c.chapter.title)}</h1><p class="sub">${esc(c.chapter.description)}</p>`+
+  groups.map(([t,list])=>`<h3>${TYPES[t][0]}</h3>${list.map(([q,i])=>{const b=best[c.chapter.id+'/'+q.id];return`<div class="row" style="margin-bottom:10px"><button class="card" data-quiz="${i}"><span><b>${esc(q.title)}</b><br><small>${q.questions.length} questions</small></span><span class="chip ${TYPES[t][1]}">${b==null?'start':b+'%'}</span></button></div>`}).join('')}`).join('');
+}
+function startQuiz(i){S={ch:S.ch,qi:i,quiz:chap().quizzes[i],i:0,score:0};renderQ()}
+const correct=(q,t)=>t==='tf'?[q.answer?0:1]:t==='single'?[q.answer]:q.answer;
+function renderQ(){
+  const z=S.quiz,q=z.questions[S.i],t=q.type||z.type,n=z.questions.length;
+  S.t=t;S.done=false;S.sel=[];
+  const opts=t==='tf'?['True','False']:(q.options||[]);
+  app.innerHTML=`<div class="top"><button class="btn ghost" data-act="chapter">← Quit</button><span>${S.i+1} / ${n}</span></div><div class="bar"><i style="width:${S.i/n*100}%"></i></div>
+  <div class="qbox"><span class="chip ${TYPES[t][1]}">${TYPES[t][0]}</span><h2>${esc(q.q)}</h2>`+
+  (t==='open'?`<textarea placeholder="Write your answer…"></textarea><button class="btn" data-act="reveal">Show model answer</button>`:
+  `<div class="opts">${opts.map((o,k)=>`<button class="opt" data-opt="${k}">${esc(o)}</button>`).join('')}</div>${t==='multi'?'<button class="btn" data-act="check">Check answer</button>':''}`)+`<div id="fb"></div></div>`;
+}
+function nextBtn(){return`<button class="btn" data-act="next">${S.i+1<S.quiz.questions.length?'Next question':'See result'}</button>`}
+function pick(k){
+  if(S.done)return;
+  if(S.t==='multi'){S.sel=S.sel.includes(k)?S.sel.filter(x=>x!==k):[...S.sel,k];document.querySelectorAll('.opt').forEach(b=>b.classList.toggle('sel',S.sel.includes(+b.dataset.opt)))}
+  else{S.sel=[k];check()}
+}
+function check(){
+  if(S.done||!S.sel.length)return;S.done=true;
+  const q=S.quiz.questions[S.i],cor=correct(q,S.t),ok=cor.length===S.sel.length&&cor.every(k=>S.sel.includes(k));
+  document.querySelectorAll('.opt').forEach(b=>{const k=+b.dataset.opt;b.disabled=true;b.classList.remove('sel');if(cor.includes(k))b.classList.add('ok');else if(S.sel.includes(k))b.classList.add('bad')});
+  if(ok)S.score++;
+  document.getElementById('fb').innerHTML=`<div class="fb"><b>${ok?'Correct':'Not quite'}.</b> ${esc(q.explain)}</div>${nextBtn()}`;
+}
+function reveal(){
+  if(S.done)return;S.done=true;const q=S.quiz.questions[S.i];
+  document.getElementById('fb').innerHTML=`<div class="fb"><b>Model answer</b><br>${esc(q.answer)}${q.explain?`<br><br><small>${esc(q.explain)}</small>`:''}</div><p class="sub" style="margin:16px 0 0">How did you do?</p><div class="rate"><button class="btn mint" data-act="rate" data-v="1">Got it</button><button class="btn peach" data-act="rate" data-v="0.5">Partly</button><button class="btn pink" data-act="rate" data-v="0">Missed</button></div>`;
+}
+function next(){S.i++;S.i<S.quiz.questions.length?renderQ():finish()}
+function finish(){
+  const n=S.quiz.questions.length,pct=Math.round(S.score/n*100),key=S.ch+'/'+S.quiz.id;
+  best[key]=Math.max(best[key]||0,pct);put('qz-best',best);
+  app.innerHTML=`<div class="qbox" style="text-align:center"><span class="chip ${TYPES[S.quiz.type][1]}">${esc(S.quiz.title)}</span><div class="big">${pct}%</div><p class="sub">${S.score} of ${n} correct. ${pct>=80?'Great work.':pct>=50?'Good progress, review the misses.':'Keep going, try again.'}</p><button class="btn" data-act="retry">Try again</button> <button class="btn ghost" data-act="chapter">Back to chapter</button></div>`;
+}
+function act(a,d){
+  if(a==='home')home();else if(a==='chapter')openChapter(S.ch);else if(a==='next')next();else if(a==='check')check();
+  else if(a==='reveal')reveal();else if(a==='retry')startQuiz(S.qi);else if(a==='rate'){S.score+=+d.v;next()}
+}
+app.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act],[data-opt],[data-ch],[data-quiz]');if(!b)return;const d=b.dataset;
+  if(d.ch)openChapter(d.ch);else if(d.quiz!==undefined)startQuiz(+d.quiz);else if(d.opt!==undefined)pick(+d.opt);else act(d.act,d);
+});
+app.addEventListener('change',e=>{
+  if(e.target.id!=='imp')return;
+  [...e.target.files].forEach(f=>{const r=new FileReader();r.onload=()=>{
+    try{const j=JSON.parse(r.result);[].concat(j).forEach(c=>{if(!c.chapter?.id||!Array.isArray(c.quizzes))throw 0;imported=imported.filter(x=>x.chapter.id!==c.chapter.id);imported.push(c)});put('qz-imported',imported);home()}
+    catch(err){alert('Could not read '+f.name+'. Check that it follows the quiz JSON format.')}};r.readAsText(f)});
+});
+home();
+</script>
+</body>
+</html>
