@@ -1,0 +1,547 @@
+{
+  "chapter": {
+    "id": "ch2",
+    "title": "Principal Component Analysis (PCA)",
+    "emoji": "📉",
+    "description": "Variance, eigenvectors, choosing q, correlation circle, outliers"
+  },
+  "quizzes": [
+    {
+      "id": "tf-basics",
+      "title": "True / False",
+      "type": "tf",
+      "questions": [
+        {
+          "type": "tf",
+          "q": "PCA requires the variables to be normally distributed.",
+          "answer": false,
+          "explain": "PCA is a purely descriptive method: it assumes no probabilistic model, so normality is not required."
+        },
+        {
+          "type": "tf",
+          "q": "The total variance of the centered data equals the sum of all the eigenvalues of the covariance matrix (its trace).",
+          "answer": true,
+          "explain": "Total variance = trace of C = sum of eigenvalues. In the student example: 11.39 + 8.94 + 12.06 + 7.91 = 40.30 = 28.23 + 12.03 + 0.03 + 0.01."
+        },
+        {
+          "type": "tf",
+          "q": "The principal components are correlated with each other because they are all built from the same original variables.",
+          "answer": false,
+          "explain": "The axes are orthogonal, which makes the components uncorrelated. Sharing the same source variables does not make them correlated."
+        },
+        {
+          "type": "tf",
+          "q": "If we keep q = p axes, PCA loses no information (J = 0).",
+          "answer": true,
+          "explain": "With q = p, V is an orthogonal p × p matrix, so PCA is just a rotation: distances are preserved and X' = X."
+        },
+        {
+          "type": "tf",
+          "q": "The sign of a principal axis is meaningful: an individual with a positive coordinate on F1 is above average.",
+          "answer": false,
+          "explain": "If v is an eigenvector, so is -v. Two correct programs can give mirrored plots, so only relative positions should be interpreted."
+        },
+        {
+          "type": "tf",
+          "q": "Centering and scaling the variables is equivalent to doing PCA on the correlation matrix.",
+          "answer": true,
+          "explain": "Centering only gives PCA on the covariance matrix. Centering and scaling (variance 1 for every variable) gives PCA on the correlation matrix."
+        },
+        {
+          "type": "tf",
+          "q": "The variance of the k-th column of U = XV is equal to the eigenvalue λk.",
+          "answer": true,
+          "explain": "λk is the inertia carried by axis vk, which is exactly the variance of the projected data on that axis."
+        },
+        {
+          "type": "tf",
+          "q": "Dividing by n-1 instead of n changes the principal axes found by PCA.",
+          "answer": false,
+          "explain": "The eigenvectors are identical. Only the eigenvalues are multiplied by n/(n-1), and the explained variance ratios are unchanged."
+        },
+        {
+          "type": "tf",
+          "q": "A short arrow in the correlation circle means the variable is uncorrelated with all the others.",
+          "answer": false,
+          "explain": "A short arrow means the variable is badly represented by the two axes of the plane, so no conclusion can be drawn about it. Only long arrows near the circle can be interpreted."
+        },
+        {
+          "type": "tf",
+          "q": "Projecting the individuals onto fewer axes can stretch the distances between them.",
+          "answer": false,
+          "explain": "A projection can only shrink distances, never stretch them. That is why we maximize the spread: it keeps distances as large and as faithful as possible."
+        },
+        {
+          "type": "tf",
+          "q": "A few extreme points can make a dataset look almost one-dimensional, with a single axis explaining most of the variance.",
+          "answer": true,
+          "explain": "The mean and the variance (second-order statistics) are very sensitive: the slide example shows one axis explaining about 96% of the variance because of a few outliers."
+        },
+        {
+          "type": "tf",
+          "q": "Outliers are errors and must always be deleted before running PCA.",
+          "answer": false,
+          "explain": "Outliers are not necessarily errors: they can be the most interesting individuals. We should analyze them in the exploratory phase, then keep, remove (if truly erroneous) or use robust PCA."
+        },
+        {
+          "type": "tf",
+          "q": "If the variables have very different units, centering them is enough to avoid any problem.",
+          "answer": false,
+          "explain": "Centering removes the mean, not the scale. A variable with a huge scale (salary in dinars) would still dominate PC1, so we must also scale (heterogeneous variables)."
+        },
+        {
+          "type": "tf",
+          "q": "Reducing from p to q < p axes always loses some variance, unless the discarded eigenvalues are 0.",
+          "answer": true,
+          "explain": "The lost variance is the sum of the discarded eigenvalues. It is zero only if those eigenvalues are 0."
+        }
+      ]
+    },
+    {
+      "id": "single-core",
+      "title": "Single choice",
+      "type": "single",
+      "questions": [
+        {
+          "type": "single",
+          "q": "Which distance is used by PCA?",
+          "options": [
+            "Manhattan (p = 1)",
+            "Chebyshev (p = ∞)",
+            "Hamming",
+            "Euclidean (p = 2)"
+          ],
+          "answer": 3,
+          "explain": "Variance and the Frobenius norm are built from squared Euclidean distances. Manhattan and Chebyshev are other p-norms but are not the ones used by PCA."
+        },
+        {
+          "type": "single",
+          "q": "n = 100 individuals, p = 10 variables, q = 3 axes are kept. What is the shape of the projection matrix V?",
+          "options": [
+            "(3, 10)",
+            "(100, 3)",
+            "(10, 3)",
+            "(10, 10)"
+          ],
+          "answer": 2,
+          "explain": "U = XV gives (100 × 10)(10 × 3) = (100 × 3), so V is p × q = (10, 3). (100, 3) is the shape of U, which is the tempting mix-up."
+        },
+        {
+          "type": "single",
+          "q": "What is the variance (with 1/n) of the 1D data {1, 2, 3, 6}?",
+          "options": [
+            "3",
+            "4.67",
+            "3.5",
+            "14"
+          ],
+          "answer": 2,
+          "explain": "The centroid is 3, squared distances are 4, 1, 0, 9, sum 14, so 14/4 = 3.5. 4.67 is 14/3, which would be the 1/(n-1) version."
+        },
+        {
+          "type": "single",
+          "q": "The first principal axis v1 is:",
+          "options": [
+            "The eigenvector of the covariance matrix with the smallest eigenvalue",
+            "The mean vector of the data",
+            "The original variable with the largest variance",
+            "The eigenvector of the covariance matrix with the largest eigenvalue, with norm 1"
+          ],
+          "answer": 3,
+          "explain": "The eigenvalue is the variance carried by the axis, so the largest one comes first. The original variable with the largest variance is not necessarily an eigenvector."
+        },
+        {
+          "type": "single",
+          "q": "The correlation matrix of 6 standardized variables is used in PCA. What is the sum of the 6 eigenvalues?",
+          "options": [
+            "1",
+            "6",
+            "12",
+            "It depends on the data"
+          ],
+          "answer": 1,
+          "explain": "For standardized data each variable has variance 1, so the total variance (trace) equals p = 6. It does not depend on the data."
+        },
+        {
+          "type": "single",
+          "q": "Eigenvalues of a correlation matrix: 2.6, 1.4, 0.6, 0.3, 0.1. How many axes are needed to keep more than 85% of the variance?",
+          "options": [
+            "2",
+            "3",
+            "4",
+            "5"
+          ],
+          "answer": 1,
+          "explain": "The total is 5. Cumulative ratios: 52%, 80%, 92%... q = 2 gives 80% < 85%, so we need q = 3 (92%)."
+        },
+        {
+          "type": "single",
+          "q": "In the correlation circle, two variables are represented by long arrows at about 90° from each other. Their correlation is approximately:",
+          "options": [
+            "+1",
+            "-1",
+            "0",
+            "Impossible to say"
+          ],
+          "answer": 2,
+          "explain": "Small angle means correlation ≈ +1, opposite arrows mean ≈ -1, and 90° means ≈ 0. The conclusion is valid here because both arrows are long (well represented)."
+        },
+        {
+          "type": "single",
+          "q": "The covariance matrix is C = [[2, 1], [1, 2]]. What share of the variance does the first axis explain?",
+          "options": [
+            "50%",
+            "66.7%",
+            "75%",
+            "100%"
+          ],
+          "answer": 2,
+          "explain": "det(C - λI) = (2 - λ)² - 1 = 0 gives λ = 3 and λ = 1. The share of axis 1 is 3 / (3 + 1) = 75%."
+        },
+        {
+          "type": "single",
+          "q": "Why do we center the data before PCA?",
+          "options": [
+            "To make all variables have variance 1",
+            "Otherwise the first axis would just point from the origin towards the mean instead of describing the variation",
+            "To make the eigenvalues smaller",
+            "To make the axes non-orthogonal"
+          ],
+          "answer": 1,
+          "explain": "Centering puts the cloud at the origin. Option A describes scaling (reducing), which is a different step."
+        },
+        {
+          "type": "single",
+          "q": "Eigenvalues are 28.23, 12.03, 0.03, 0.01 and n = 9. What is the reconstruction error J = ||Xc - X'||F² when q = 2?",
+          "options": [
+            "40.30",
+            "0.04",
+            "40.26",
+            "0.36"
+          ],
+          "answer": 3,
+          "explain": "J = n × (sum of discarded eigenvalues) = 9 × (0.03 + 0.01) = 0.36. 0.04 forgets the factor n."
+        },
+        {
+          "type": "single",
+          "q": "numpy.linalg.eigh returns the eigenvalues:",
+          "options": [
+            "In descending order, ready to use",
+            "In ascending order, so they must be sorted in descending order",
+            "In random order",
+            "Only the positive ones"
+          ],
+          "answer": 1,
+          "explain": "eigh returns ascending eigenvalues. Forgetting to sort them would make you keep the least important axes."
+        }
+      ]
+    },
+    {
+      "id": "multi-select",
+      "title": "Multiple answers",
+      "type": "multi",
+      "questions": [
+        {
+          "type": "multi",
+          "q": "Which statements about the principal components are correct? (select all)",
+          "options": [
+            "They are uncorrelated with each other",
+            "They are ordered by decreasing variance",
+            "They are linear combinations of the original variables",
+            "They are real variables that were measured on the individuals"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "The new variables are synthetic (artificial): built, not measured. That is why they must be interpreted with the correlation circle."
+        },
+        {
+          "type": "multi",
+          "q": "Which are objectives of PCA according to the course? (select all)",
+          "options": [
+            "Study the variability of individuals (similarities and differences)",
+            "Study the relationships between variables",
+            "Find a reduced-dimension space (compression, noise and redundancy removal)",
+            "Predict the label of a new individual (supervised learning)"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "PCA is an exploratory, descriptive method. It uses no labels, so supervised prediction is not one of its objectives."
+        },
+        {
+          "type": "multi",
+          "q": "Why is PCA sensitive to noise and outliers? (select all)",
+          "options": [
+            "The mean gives the same weight to every point",
+            "The variance squares the distances, so far points count much more",
+            "It relies on second-order statistics (mean and variance)",
+            "It requires the data to be normally distributed"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "Normality is not required by PCA, so option D is wrong. The sensitivity comes from mean and variance."
+        },
+        {
+          "type": "multi",
+          "q": "In which cases should we center AND scale the variables? (select all)",
+          "options": [
+            "Age in years and salary in dinars",
+            "Height in meters and weight in grams",
+            "Four exam marks all out of 20",
+            "Temperature in °C and pressure in Pa"
+          ],
+          "answer": [
+            0,
+            1,
+            3
+          ],
+          "explain": "Heterogeneous variables (different units or scales) need scaling. The four marks out of 20 are homogeneous, so centering only is enough."
+        },
+        {
+          "type": "multi",
+          "q": "What happens when we divide by n-1 instead of n in the covariance matrix? (select all)",
+          "options": [
+            "The eigenvalues are multiplied by n/(n-1)",
+            "The eigenvectors are identical",
+            "The explained variance ratios are identical",
+            "The principal axes are different"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "A global factor n/(n-1) on the matrix scales every eigenvalue equally, so the axes and the ratios do not change."
+        },
+        {
+          "type": "multi",
+          "q": "What is true when we keep q = p axes? (select all)",
+          "options": [
+            "The distances between individuals are preserved",
+            "J = 0",
+            "The cumulative explained variance is 100%",
+            "The dimension is reduced"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "With q = p, PCA is a rotation of the axes: no reduction and no loss. The new variables are still uncorrelated and sorted by variance."
+        },
+        {
+          "type": "multi",
+          "q": "Which statements about the Python implementation are correct? (select all)",
+          "options": [
+            "np.linalg.eigh returns ascending eigenvalues, so they must be sorted",
+            "Eigenvectors are the columns in numpy, but the rows of pca.components_ in scikit-learn",
+            "scikit-learn's PCA does not scale the variables",
+            "* is the matrix product in numpy"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "* is the element-wise product; the matrix product is @."
+        },
+        {
+          "type": "multi",
+          "q": "Which statements about reading the correlation circle are correct? (select all)",
+          "options": [
+            "An arrow close to the circle means the variable is well represented by the two axes",
+            "Two arrows with a small angle mean a correlation close to +1",
+            "Two opposite arrows mean a correlation close to -1",
+            "A short arrow means a strong correlation with the first axis"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "A short arrow means the variable is badly represented by the plane, so we do not interpret it."
+        }
+      ]
+    },
+    {
+      "id": "open-qa",
+      "title": "Open questions",
+      "type": "open",
+      "questions": [
+        {
+          "type": "open",
+          "q": "What is the key principle of PCA, and why do we maximize the variance of the projected data?",
+          "answer": "Projecting from p to q dimensions loses information, and there are many ways to project. PCA chooses the axes that maximize the variance (inertia) of the projected data, which keeps the distances between individuals as large and faithful as possible. Equivalently, it minimizes the reconstruction error ||X - X'||F².",
+          "explain": "Remember that 'information' here means distances between individuals."
+        },
+        {
+          "type": "open",
+          "q": "When do we center only, and when do we center and scale? What happens if we forget?",
+          "answer": "Center only when the variables are homogeneous (same unit and scale, like marks out of 20). Center and scale when they are heterogeneous (age and salary). Without centering, the first axis points toward the mean; without scaling, the variable with the largest scale dominates PC1 as an artefact of units.",
+          "explain": "Centering and scaling is equivalent to PCA on the correlation matrix."
+        },
+        {
+          "type": "open",
+          "q": "How do we choose the number of axes q? Illustrate with eigenvalues 28.23, 12.03, 0.03, 0.01 and a threshold s = 0.90.",
+          "answer": "Choose the smallest q such that (sum of the q first eigenvalues) / (sum of ALL eigenvalues) > s. Here the total is 40.30: q = 1 gives 0.70 < 0.90, q = 2 gives 0.9987 > 0.90, so q = 2.",
+          "explain": "Do not forget to divide by the sum of all eigenvalues."
+        },
+        {
+          "type": "open",
+          "q": "What happens if we keep q = p axes? Is PCA still useful?",
+          "answer": "V is a p × p orthogonal matrix, so PCA is only a rotation: distances are preserved, X' = X and J = 0. There is no dimension reduction, but the new variables are uncorrelated and sorted by variance, which helps analysis.",
+          "explain": "Dimension reduction only happens when q < p."
+        },
+        {
+          "type": "open",
+          "q": "Why do we divide by n or n-1 in the variance, and what is the impact on PCA?",
+          "answer": "Dividing makes the sum of squared distances an average, comparable between datasets. 1/n is the descriptive variance of the data at hand; 1/(n-1) is the unbiased estimate for a sample, because one degree of freedom is used to estimate the mean. The eigenvectors and ratios are identical; the eigenvalues are multiplied by n/(n-1).",
+          "explain": "scikit-learn uses n-1, the slides and numpy std(ddof=0) use n."
+        },
+        {
+          "type": "open",
+          "q": "Why is PCA sensitive to outliers, and what should we do about it?",
+          "answer": "PCA relies on the mean and the variance. The mean gives every point the same weight and the variance squares the deviations, so one extreme point can attract the first axis. Outliers are not necessarily errors, so we check them in the exploratory phase (boxplots, scatter plots), then keep, remove or use robust PCA.",
+          "explain": "Give three points: second-order statistics, not always errors, explore before PCA."
+        },
+        {
+          "type": "open",
+          "q": "How do you read a correlation circle?",
+          "answer": "Each variable is an arrow with coordinates (correlation with F1, correlation with F2). An arrow near the circle is well represented, a short arrow is not interpretable. Small angle between arrows: correlation ≈ +1; 90°: ≈ 0; opposite: ≈ -1.",
+          "explain": "It is only meaningful with real-world features that have a meaning, not with raw image pixels."
+        },
+        {
+          "type": "open",
+          "q": "Show why minimizing the intra-cluster variance is equivalent to maximizing the inter-cluster variance, and why the centroid represents a cluster in k-means.",
+          "answer": "Var_total = Var_intra + Var_inter, and the total variance does not depend on the partition, so if intra goes down, inter goes up by the same amount. The centroid is the mean: setting the derivative -2 × sum(vi - gj) to 0 gives gj = (1/nj) × sum(vi).",
+          "explain": "PCA also splits a constant total variance, among the axes."
+        },
+        {
+          "type": "open",
+          "q": "List the steps of the PCA algorithm.",
+          "answer": "1) Center (and scale if needed) X. 2) Compute the covariance matrix C = XᵀX / n. 3) Compute its eigenvalues and eigenvectors. 4) Sort the pairs by descending eigenvalues. 5) Keep the first q pairs to form V (p × q). 6) Project: U = XV (n × q).",
+          "explain": "Write the dimension of every matrix to gain easy marks."
+        }
+      ]
+    },
+    {
+      "id": "midterm-style",
+      "title": "Midterm style",
+      "type": "mixed",
+      "questions": [
+        {
+          "type": "tf",
+          "q": "The principal axes are orthogonal and have unit norm.",
+          "answer": true,
+          "explain": "They are eigenvectors of a symmetric matrix (orthogonal) with norm 1, which makes the components uncorrelated."
+        },
+        {
+          "type": "tf",
+          "q": "The first principal axis is the eigenvector associated with the smallest eigenvalue.",
+          "answer": false,
+          "explain": "It is the eigenvector associated with the largest eigenvalue, since the eigenvalue is the variance carried by the axis."
+        },
+        {
+          "type": "single",
+          "q": "Which relation between norms is always true for any vector x?",
+          "options": [
+            "||x||1 ≤ ||x||2 ≤ ||x||∞",
+            "||x||∞ ≤ ||x||2 ≤ ||x||1",
+            "||x||2 ≤ ||x||∞ ≤ ||x||1",
+            "||x||1 = ||x||2 = ||x||∞"
+          ],
+          "answer": 1,
+          "explain": "For x = (3, -4): ||x||∞ = 4, ||x||2 = 5, ||x||1 = 7, so 4 ≤ 5 ≤ 7."
+        },
+        {
+          "type": "single",
+          "q": "With C = [[2, 1], [1, 2]], the centered point x = (2, 2) is projected onto v1 = (1, 1)/√2. What is its coordinate u1?",
+          "options": [
+            "4",
+            "2√2 ≈ 2.83",
+            "2",
+            "0"
+          ],
+          "answer": 1,
+          "explain": "u1 = x · v1 = (2 + 2)/√2 = 2√2. Its coordinate on v2 = (1, -1)/√2 is 0, so the point lies exactly on axis 1."
+        },
+        {
+          "type": "single",
+          "q": "With C = [[2, 1], [1, 2]], what is the correlation between X1 and the first component, r(X1, c1) = v11 √λ1 / σ1?",
+          "options": [
+            "0.5",
+            "0.75",
+            "0.866",
+            "1"
+          ],
+          "answer": 2,
+          "explain": "r = 0.707 × √3 / √2 = 0.866. The correlation with the second component is 0.5, and 0.866² + 0.5² = 1 because q = p."
+        },
+        {
+          "type": "single",
+          "q": "The student example has 9 students and 4 subjects, and we keep 2 axes. What is the shape of the reconstruction X' = U Vᵀ?",
+          "options": [
+            "(9, 2)",
+            "(2, 4)",
+            "(4, 2)",
+            "(9, 4)"
+          ],
+          "answer": 3,
+          "explain": "(9 × 2)(2 × 4) = 9 × 4, the same shape as X."
+        },
+        {
+          "type": "multi",
+          "q": "In the student example, which interpretations are correct? (select all)",
+          "options": [
+            "F1 is the general level (all four correlations are large and positive)",
+            "F2 opposes sciences (MATH, PHYS) to languages (FRAN, ANGL)",
+            "Two axes keep almost 100% of the variance",
+            "The last two axes carry most of the information"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "The eigenvalues 28.23 and 12.03 give 70% and 30%, while the last two (0.03 and 0.01) carry almost nothing."
+        },
+        {
+          "type": "multi",
+          "q": "Which of these are good practices before running PCA? (select all)",
+          "options": [
+            "Check the shape of the arrays (n, p)",
+            "Look for outliers in the exploratory phase",
+            "Scale the variables if they are heterogeneous",
+            "Remove every extreme point automatically"
+          ],
+          "answer": [
+            0,
+            1,
+            2
+          ],
+          "explain": "Outliers can be the most interesting individuals, so they should be analyzed rather than blindly removed."
+        },
+        {
+          "type": "open",
+          "q": "Eigenvalues are 28.23, 12.03, 0.03, 0.01 and n = 9. What fraction of the variance is lost with q = 2, and what is the reconstruction error J?",
+          "answer": "Lost fraction = (0.03 + 0.01) / 40.30 ≈ 0.1%. J = n × (sum of discarded eigenvalues) = 9 × 0.04 = 0.36. The loss is the variance of the discarded axes.",
+          "explain": "The notebook gives 0.389 because the unrounded eigenvalues are about 0.043."
+        },
+        {
+          "type": "open",
+          "q": "Give the three parts of a good interpretation of a PCA result.",
+          "answer": "(a) How much variance the plane keeps (explained variance ratio of F1 and F2). (b) What each axis means in plain words, using the correlation circle (e.g. F1 = general level, F2 = sciences versus languages). (c) What the positions of the individuals say (e.g. pier is good in languages and weak in sciences).",
+          "explain": "Numbers alone get half marks: always finish with a sentence in plain words."
+        }
+      ]
+    }
+  ]
+}
